@@ -71,45 +71,48 @@ class GridDemo( Frame ):
 		print ("connection initialized")
 		serialCAN.write("s4")
 		
-		
+	#This is a function which parses the repeating section of the filter
+	#parsedmsg is the CAN message broken up into it's components
+	#readindicie indicates which of the repeating section is being parsed
+	#dataindicie points to the first unparsed piece of data in the CAN message
 	def parsesecton(self , parsedmsg, readindicie, dataindicie):
 		data = parsedmsg.group(4)
-		a = self.filter1.get()
+		a = self.filter1.get() #read in a filter, remove spaces and seperate it at commas
 		a = a.strip( ' ' )
 		filterlist = a.split(",")
-		if(filterlist[readindicie+3] == "l"):
+		if(filterlist[readindicie+3] == "l"): #if little endian is indicated the indicated number of bits are rearanged and stored in dataflipped
 			print("little endian detected")
-			#datafliped = data[2+dataindicie]+data[3+dataindicie]+data[0+dataindicie]+data[1+dataindicie]
-			datafliped = ""
+			dataflipped = ""
 			count = int(filterlist[readindicie+2])
 			position = 0
 			while(count > 0):
-				datafliped = data[position+dataindicie]+data[position+dataindicie+1]+datafliped
+				dataflipped = data[position+dataindicie]+data[position+dataindicie+1]+dataflipped
 				position = position + 2
 				count = count - 1
-			print(datafliped)
-		else:
-			datafliped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
-		self.output.insert(END, " "+filterlist[readindicie+1])
-		self.output.insert(END, int(datafliped, 16)*float(filterlist[readindicie+4]) )
+			print(dataflipped)
+		else:  #if little endian is not detected, big endian is assumed and the indicated number of bytes are read off of data and stored in dataflipped
+			dataflipped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
+		self.output.insert(END, " "+filterlist[readindicie+1])  #adds the message from the filter to the output window
+		self.output.insert(END, int(dataflipped, 16)*float(filterlist[readindicie+4]) ) #converts the hex data in dataflipped to decimal and then multiplies by the user defined multiplier, then outputs
 
 		
 		
-		
+	#This is a function which handles the parsing of an entire CAN message
+	#Most of the actual parsing is done through repeated calls to parssection which parses each section of the message
 	def parsemessage (self , parsedmsg):
-		b = self.filter1.get()
+		b = self.filter1.get() #imports the user's filter then splits it based on commas and stores the list to list1
 		list1 = b.split(",")
 		print(parsedmsg.groups())
-		if (list1[0] == parsedmsg.group(1)):
+		if (list1[0] == parsedmsg.group(1)): #checks to see if the header matches
 			print("header detected")
 			self.output.insert(END, "\n")
 			self.output.insert(END, "Header: ")
-			self.output.insert(END, parsedmsg.group(1))
+			self.output.insert(END, parsedmsg.group(1)) #prints the header
 			self.output.insert(END, ", BOD: ")
-			self.output.insert(END, parsedmsg.group(3))
-			readindicie = 1
-			dataindicie = 0
-			while(readindicie+5 <= len(list1)):
+			self.output.insert(END, parsedmsg.group(3)) #prints the number of bytes of data
+			readindicie = 1 #readindicie points to the first unread field in the filter
+			dataindicie = 0 #data indicie points to the first unread bit of data
+			while(readindicie+5 <= len(list1)): #calls parsesection as long as there are still at least five unread filter fields
 				self.parsesecton(parsedmsg, readindicie, dataindicie)
 				dataindicie = dataindicie + 2*int(list1[readindicie+2])
 				readindicie = readindicie + 5
