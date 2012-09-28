@@ -234,7 +234,7 @@ class GridDemo( Frame ):
 		self.filter15.insert( INSERT, "Add a filter..." )
 		
 		
-		self.mylabel = Label(self, text="Header (0x), Initial Offset, \"Msg\", Length (bytes), Endianness , Scale, Skip, \"Msg\", Length, Endianness, Skip...", width = 2, height = 2)
+		self.mylabel = Label(self, text="Header (0x), Initial Offset, Msg, Length (bytes), Endianness , Scale, Skip, Msg, Length, Endianness, Skip...", width = 2, height = 2)
 		self.mylabel.grid( row = 1, column = 0, sticky = W+E+N+S )
 		
 		self.label2 = Label(self, text="Raw Message                                            Decoded Message", width = 2, height = 2)
