@@ -4,10 +4,12 @@ import serial
 import re
 import threading
 import queue
+import time
 
-global arduino
+global serialCAN
 
 class GridDemo( Frame ):
+	#This function needs to be updated or discarded before being commented
 	def update_filters(self):
 		a = self.filter1.get()
 		a = a.strip( ' ' )
@@ -28,6 +30,7 @@ class GridDemo( Frame ):
 			if list1[2] == "UI":
 				print ( "bytes as an unisgned int")
 
+	#This function needs to be updated or discarded before being commented
 	def decode(self):
 		b = self.filter4.get ()
 		print (b)
@@ -52,33 +55,37 @@ class GridDemo( Frame ):
 		else: 
 			print ("header not recognized");
 		
-
+	#This function opens the thread which handles the input from the serial port
+	#It only needs to be run once, it is run by pressing the Recieve Messages button
 	def recievemessage (self):
 		print("Starting Second Thread");
-		## Run the thread and the GUI main loop
+		#self.message_queue is the queue which handles passing CAN messages between threads
 		x = CanPort(self.message_queue, self)
 		th=threading.Thread(target=x.getmessage)
 		th.start()
 			
 		
-
+	#This function is depreciated and shuld probably be deleated.  Its functionality shuld be (Has been) moved to the CANport thread
 	def initconnnection (self):
-		arduino = serial.Serial("COM3", 9600)
+		serialCAN = serial.Serial("COM3", 9600)
 		print ("connection initialized")
-		arduino.write("s4")
+		serialCAN.write("s4")
 	
+	#Refreshout is triggered whenever a message is present in the message_queue.  It refreshes the GUI.
 	def refreshout (self, event):
-		print ("refreshout ran")
+		#This pulls the unparsed message and writes it to the output field of the GUI
 		self.output.insert(INSERT, self.message_queue.get())
 		self.output.insert(INSERT, "                       ")
+		#This pulls the parsed message and prints its components to the output field of the GUI
 		self.output.insert(INSERT, self.message_queue.get().groups())
 		self.output.insert(INSERT, "\n")
 		self.output.see(END)
 		
 	
+	#This initializes the Tkinter GUI
 	def __init__( self ):
 		Frame.__init__( self )
-		self.master.title( "Grid" )
+		self.master.title( "CAN-USB" )
 		
 		self.message_queue = queue.Queue()
 
@@ -179,12 +186,16 @@ class GridDemo( Frame ):
 		self.mylabel = Label(self, text="Header, Initial Offset, Type, Length, Skip, Type, Length, Skip...", width = 2, height = 2)
 		self.mylabel.grid( row = 1, column = 0, sticky = W+E+N+S )
 		
-		self.label2 = Label(self, text="Raw Message                         Decoded Message", width = 2, height = 2)
+		self.label2 = Label(self, text="Raw Message                                            Decoded Message", width = 2, height = 2)
 		self.label2.grid( row = 18, column = 0, sticky = W+E+N+S )
 		
 		self.output = Text( self, width = 90, height = 15 )
 		self.output.grid( row = 19, column = 0, sticky = W+E+N+S )
 
+		
+#CanPort is the thread which handles direct comunication with the CAN device. CanPort initializes the connection and then recieves
+#and parses standard CAN messages. These messages are then passed to the Grid thread via the message_queue queue where they are
+#added to the GUI
 class CanPort():
 	def __init__( self, message_queue, mainwindow ):
 		self.message_queue = message_queue
@@ -192,13 +203,37 @@ class CanPort():
 		
 	def getmessage (self):
 		print("Waiting for new message");
-		arduino = serial.Serial("COM3", 9600)
+		#opens a serial connection called serialCAN on COM5 at 57600 Baud code which allows for a selection of COM ports shuld be added
+		serialCAN = serial.Serial("COM5", 57600)
+		#compiles a regular expression to parse both the short and long form messages as defined in the CAN-USB manual
 		self.regex = re.compile(r"(?:t([0-9a-fA-F]{3})|T([0-9a-fA-F]{8}))(\d)([^\r]*)")
+		#determines that the serial port has opened correctly
+		print(serialCAN.isOpen())
+		temp = None
+		#initializes the CAN-USB device to 250Kbit/s which is the maritime standard
+		#if the CAN device is not closed properly this may take up to ~20 seconds to clear the serial buffer of old messages
+		while(temp != b'\r'):
+			time.sleep(.2)
+			#initialize the CAN-USB device at 250Kbits/s
+			serialCAN.write(b'S5\r')
+			print(temp)
+			temp = serialCAN.read()
+		time.sleep(1)
+		#Opens the CAN port to begin reciveing messages
+		serialCAN.write(b'O\r')
 		while(1):
-			msg = arduino.readline()
+			charicter = None
+			msg = b""
+			#Reads in charicters from the serial stream until a \r is encounterd which demarks the end of a CAN message
+			while(charicter != b'\r'):
+				charicter = serialCAN.read()
+				#appends the newly read charicter to the message being built
+				msg = msg + bytes(charicter)
 			msg = msg.decode('utf-8')
-			print (msg)
+			#print (msg)
+			#Trys the recieved message against the regular expression to see if message matches the recognized format
 			msgparsed = self.regex.search(msg)
+			#if the message is of the recognized format it is added to the message queue along with all of the parsed groups
 			if msgparsed:
 				#print(msgparsed.groups())
 				self.message_queue.put(msg)
@@ -206,9 +241,11 @@ class CanPort():
 				try:
 					self.mainwindow.event_generate("<<rout>>", when = 'tail')
 				except TclError:
+					#Tells the CAN-USB device to close the CAN port
+					serialCAN.write(b'C\r')
+					#Terminates the serial connection
+					serialCAN.close()
 					break
-				
-				#GridDemo.output.insert( INSERT, msg )
 			else:
 				print ("msg failed to parse")
 			
