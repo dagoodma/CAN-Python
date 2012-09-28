@@ -70,17 +70,65 @@ class GridDemo( Frame ):
 		serialCAN = serial.Serial("COM3", 9600)
 		print ("connection initialized")
 		serialCAN.write("s4")
+		
+		
+	def parsesecton(self , parsedmsg, readindicie, dataindicie):
+		data = parsedmsg.group(4)
+		a = self.filter1.get()
+		a = a.strip( ' ' )
+		filterlist = a.split(",")
+		if(filterlist[readindicie+3] == "l"):
+			print("little endian detected")
+			#datafliped = data[2+dataindicie]+data[3+dataindicie]+data[0+dataindicie]+data[1+dataindicie]
+			datafliped = ""
+			count = int(filterlist[readindicie+2])
+			position = 0
+			while(count > 0):
+				datafliped = data[position+dataindicie]+data[position+dataindicie+1]+datafliped
+				position = position + 2
+				count = count - 1
+			print(datafliped)
+		else:
+			datafliped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
+		self.output.insert(END, " "+filterlist[readindicie+1])
+		self.output.insert(END, int(datafliped, 16)*float(filterlist[readindicie+4]) )
+
+		
+		
+		
+	def parsemessage (self , parsedmsg):
+		b = self.filter1.get()
+		list1 = b.split(",")
+		print(parsedmsg.groups())
+		if (list1[0] == parsedmsg.group(1)):
+			print("header detected")
+			self.output.insert(END, "\n")
+			self.output.insert(END, "Header: ")
+			self.output.insert(END, parsedmsg.group(1))
+			self.output.insert(END, ", BOD: ")
+			self.output.insert(END, parsedmsg.group(3))
+			readindicie = 1
+			dataindicie = 0
+			while(readindicie+5 <= len(list1)):
+				self.parsesecton(parsedmsg, readindicie, dataindicie)
+				dataindicie = dataindicie + 2*int(list1[readindicie+2])
+				readindicie = readindicie + 5
+				
+				
+			
 	
 	#Refreshout is triggered whenever a message is present in the message_queue.  It refreshes the GUI.
 	def refreshout (self, event):
-		#This pulls the unparsed message and writes it to the output field of the GUI
-		self.output.insert(INSERT, self.message_queue.get())
-		self.output.insert(INSERT, "                       ")
-		#This pulls the parsed message and prints its components to the output field of the GUI
-		self.output.insert(INSERT, self.message_queue.get().groups())
-		self.output.insert(INSERT, "\n")
-		self.output.see(END)
-		
+		#print(self.filterbox)
+		if(self.filterbox):
+			#This pulls the unparsed message and writes it to the output field of the GUI
+			self.output.insert(END, self.message_queue.get())
+			self.output.insert(END, "                       ")
+			#This pulls the parsed message and prints its components to the output field of the GUI
+			#self.output.insert(END, self.message_queue.get().groups())
+			self.parsemessage(self.message_queue.get());
+			self.output.insert(END, "\n")
+			self.output.see(END)
 	
 	#This initializes the Tkinter GUI
 	def __init__( self ):
@@ -101,9 +149,9 @@ class GridDemo( Frame ):
 		self.button1.grid( row = 1, column = 1, columnspan = 1, sticky = W+E+N+S )
 		self.button1["command"] = self.quit
 		
-		self.decodebutton = Button( self, text = "Decode", width = 10 )
+		self.filterbox = IntVar()
+		self.decodebutton = Checkbutton( self, text = "Apply Filters", width = 10, variable = self.filterbox, onvalue = 1, offvalue = 0 )
 		self.decodebutton.grid( row = 7, column = 1, rowspan = 5, sticky = W+E+N+S )
-		self.decodebutton["command"] = self.decode
 		
 		self.recieve = Button( self, text = "Begin\nRecieving\nMessages", width = 10 )
 		self.recieve.grid( row = 12, column = 1, rowspan = 5, sticky = W+E+N+S )
@@ -124,7 +172,7 @@ class GridDemo( Frame ):
 		a = StringVar()
 		self.filter1 = Entry(self, textvariable = a)
 		self.filter1.grid( row = 3, column = 0, sticky = W+E+N+S )
-		a.set("101001,4,I,7,9")
+		a.set("07B,0,Voltage on temp sensor: ,2,l,.001,0,temp: ,2,l,.01,0,d rail v: ,2,l,.01,0,rail v: ,2,l,.01")
 		
 		self.filter2 = Entry(self)
 		self.filter2.grid( row = 4, column = 0, sticky = W+E+N+S )
@@ -183,7 +231,7 @@ class GridDemo( Frame ):
 		self.filter15.insert( INSERT, "Add a filter..." )
 		
 		
-		self.mylabel = Label(self, text="Header, Initial Offset, Type, Length, Skip, Type, Length, Skip...", width = 2, height = 2)
+		self.mylabel = Label(self, text="Header (0x), Initial Offset, \"Msg\", Length (bytes), Endianness , Scale, Skip, \"Msg\", Length, Endianness, Skip...", width = 2, height = 2)
 		self.mylabel.grid( row = 1, column = 0, sticky = W+E+N+S )
 		
 		self.label2 = Label(self, text="Raw Message                                            Decoded Message", width = 2, height = 2)
@@ -221,6 +269,9 @@ class CanPort():
 		time.sleep(1)
 		#Opens the CAN port to begin reciveing messages
 		serialCAN.write(b'O\r')
+		time.sleep(1)
+		#Sets the CAN port to disable timestamps
+		serialCAN.write(b'Z0\r')
 		while(1):
 			charicter = None
 			msg = b""
