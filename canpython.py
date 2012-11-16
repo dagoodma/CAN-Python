@@ -5,6 +5,7 @@ import re
 import threading
 import queue
 import time
+from time import gmtime, strftime
 
 global serialCAN
 
@@ -156,28 +157,6 @@ class GridDemo( Frame ):
 			self.dataBack.logfile.close()
 		
 	
-	#This function needs to be updated or discarded before being commented
-	def update_filters(self):
-		a = self.filter1.get()
-		a = a.strip( ' ' )
-		list1 = a.split(",")
-		if len(list1) >= 5:
-			print ("If header is ");
-			print (list1[0]);
-			print (" then skip ");
-			print (list1[1]);
-			print (" bytes. And interperate the next ");
-			print (list1[3]);
-			if list1[2] == "I":
-				print ( "bytes as an integer")
-			
-			if list1[2] == "F":
-				print ( "bytes as a float")
-			
-			if list1[2] == "UI":
-				print ( "bytes as an unisgned int")
-
-
 		
 	#This function opens the thread which handles the input from the serial port
 	#It only needs to be run once, it is run by pressing the Recieve Messages button
@@ -290,7 +269,7 @@ class GridDemo( Frame ):
 		a = a.strip( ' ' )
 		filterlist = a.split(",")
 		if(filterlist[readindicie+3] == "l"): #if little endian is indicated the indicated number of bits are rearanged and stored in dataflipped
-			print("little endian detected")
+			#print("little endian detected")
 			dataflipped = ""
 			count = int(filterlist[readindicie+2])
 			position = 0
@@ -300,7 +279,7 @@ class GridDemo( Frame ):
 				count = count - 1
 		else:  #if little endian is not detected, big endian is assumed and the indicated number of bytes are read off of data and stored in dataflipped
 			dataflipped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
-			print("big endian detected")
+			#print("big endian detected")
 		print(dataflipped)
 		self.output.insert(END, " "+filterlist[readindicie+1])  #adds the message from the filter to the output window
 		print(filterlist[readindicie+4])
@@ -317,7 +296,7 @@ class GridDemo( Frame ):
 		self.dataBack.headers.add(parsedmsg.group(2)) #adds a new header to the set stored in the backend
 		#print(self.dataBack.headers);
 		if ((list1[0] == parsedmsg.group(1))or(list1[0] == parsedmsg.group(2))): #checks to see if the header matches
-			print("header detected")
+			#print("header detected")
 			self.output.insert(END, "\n")
 			self.output.insert(END, parsedmsg.groups())
 			self.output.insert(END, "\n")
@@ -345,6 +324,7 @@ class GridDemo( Frame ):
 			print(rawmsg);
 			if(self.dataBack.logflag == 1):
 				self.dataBack.logfile.write(rawmsg)
+				self.dataBack.logfile.write("      " + strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 				self.dataBack.logfile.write("\n")
 				
 			#self.output.insert(END, self.message_queue.get())

@@ -1,0 +1,7 @@
+TO DO:
+Many filters
+Filtering on data within the message
+Display most recent of each message
+	-maybe use a dictionary with headers and values
+Logging - handle close case better
+Make COM port selectable
