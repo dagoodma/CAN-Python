@@ -263,9 +263,39 @@ class GridDemo( Frame ):
 	#parsedmsg is the CAN message broken up into it's components
 	#readindicie indicates which of the repeating section is being parsed
 	#dataindicie points to the first unparsed piece of data in the CAN message
-	def parsesecton(self , parsedmsg, readindicie, dataindicie):
+	def parsesecton(self , parsedmsg, readindicie, dataindicie, filter):
 		data = parsedmsg.group(4)
-		a = self.filter1.get() #read in a filter, remove spaces and seperate it at commas
+		if(filter == 1):
+			a = self.filter1.get() #read in a filter, remove spaces and seperate it at commas
+		if(filter == 2):
+			a = self.filter2.get()	
+		if(filter == 3):
+			a = self.filter3.get()	
+		if(filter == 4):
+			a = self.filter4.get()	
+		if(filter == 5):
+			a = self.filter5.get()	
+		if(filter == 6):
+			a = self.filter6.get()	
+		if(filter == 7):
+			a = self.filter7.get()	
+		if(filter == 8):
+			a = self.filter8.get()	
+		if(filter == 9):
+			a = self.filter9.get()	
+		if(filter == 10):
+			a = self.filter10.get()	
+		if(filter == 11):
+			a = self.filter11.get()	
+		if(filter == 12):
+			a = self.filter12.get()	
+		if(filter == 13):
+			a = self.filter13.get()	
+		if(filter == 14):
+			a = self.filter14.get()	
+		if(filter == 15):
+			a = self.filter15.get()	
+			
 		a = a.strip( ' ' )
 		filterlist = a.split(",")
 		if(filterlist[readindicie+3] == "l"): #if little endian is indicated the indicated number of bits are rearanged and stored in dataflipped
@@ -280,19 +310,49 @@ class GridDemo( Frame ):
 		else:  #if little endian is not detected, big endian is assumed and the indicated number of bytes are read off of data and stored in dataflipped
 			dataflipped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
 			#print("big endian detected")
-		print(dataflipped)
+		#print(dataflipped)
 		self.output.insert(END, " "+filterlist[readindicie+1])  #adds the message from the filter to the output window
-		print(filterlist[readindicie+4])
+		#print(filterlist[readindicie+4])
 		self.output.insert(END, int(dataflipped, 16)*float(filterlist[readindicie+4]) ) #converts the hex data in dataflipped to decimal and then multiplies by the user defined multiplier, then outputs
 
 		
 		
 	#This is a function which handles the parsing of an entire CAN message
 	#Most of the actual parsing is done through repeated calls to parssection which parses each section of the message
-	def parsemessage (self , parsedmsg):
-		b = self.filter1.get() #imports the user's filter then splits it based on commas and stores the list to list1
+	def parsemessage (self , parsedmsg, filter):
+		if(filter == 1):
+			b = self.filter1.get() #imports the user's filter then splits it based on commas and stores the list to list1
+		if(filter == 2):
+			b = self.filter2.get()	
+		if(filter == 3):
+			b = self.filter3.get()	
+		if(filter == 4):
+			b = self.filter4.get()	
+		if(filter == 5):
+			b = self.filter5.get()	
+		if(filter == 6):
+			b = self.filter6.get()	
+		if(filter == 7):
+			b = self.filter7.get()	
+		if(filter == 8):
+			b = self.filter8.get()	
+		if(filter == 9):
+			b = self.filter9.get()	
+		if(filter == 10):
+			b = self.filter10.get()	
+		if(filter == 11):
+			b = self.filter11.get()	
+		if(filter == 12):
+			b = self.filter12.get()	
+		if(filter == 13):
+			b = self.filter13.get()	
+		if(filter == 14):
+			b = self.filter14.get()	
+		if(filter == 15):
+			b = self.filter15.get()	
+			
 		list1 = b.split(",")
-		print(parsedmsg.group(2))
+		#print(parsedmsg.group(2)) #prints the header
 		self.dataBack.headers.add(parsedmsg.group(2)) #adds a new header to the set stored in the backend
 		#print(self.dataBack.headers);
 		if ((list1[0] == parsedmsg.group(1))or(list1[0] == parsedmsg.group(2))): #checks to see if the header matches
@@ -311,7 +371,7 @@ class GridDemo( Frame ):
 			dataindicie = 0 #data indicie points to the first unread bit of data
 			while(readindicie+5 <= len(list1)): #calls parsesection as long as there are still at least five unread filter fields
 				dataindicie = dataindicie + 2*int(list1[readindicie])
-				self.parsesecton(parsedmsg, readindicie, dataindicie)
+				self.parsesecton(parsedmsg, readindicie, dataindicie, filter)
 				dataindicie = dataindicie + 2*int(list1[readindicie+2])
 				readindicie = readindicie + 5
 				
@@ -332,7 +392,11 @@ class GridDemo( Frame ):
 			#This pulls the parsed message and prints its components to the output field of the GUI
 			#self.output.insert(END, self.message_queue.get().groups())
 			#self.output.delete(0, END)
-			self.parsemessage(self.message_queue.get());
+			filternumber = 1
+			messageparsed = self.message_queue.get()
+			while(filternumber <= 15):
+				self.parsemessage(messageparsed, filternumber);
+				filternumber = filternumber + 1
 			#self.output.insert(END, "\n")
 			self.output.see(END)
 	

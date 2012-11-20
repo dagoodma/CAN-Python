@@ -5,3 +5,4 @@ Display most recent of each message
 	-maybe use a dictionary with headers and values
 Logging - handle close case better
 Make COM port selectable
+Clear old messages from display
