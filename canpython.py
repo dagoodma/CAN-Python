@@ -14,9 +14,9 @@ class CanData( ):
 		#Headers is the set of all CAN IDs which have been seen
 		self.headers = set()
 		#All of the currently applied filters
-		self.filters = []
+		self.filters = ()
 		#A dictionary which contains all of the most recent messages for each header
-		self.messages = []
+		self.messages = {}
 		#A flag to indicate if loging is enabled
 		self.logflag = 0
 		#The file where loging will takeplace if it is turned on
@@ -43,111 +43,58 @@ class GridDemo( Frame ):
 		self.grid( sticky = W+E+N+S )
 
 		self.button1 = Button( self, text = "Quit", width = 10 )
-		self.button1.grid( row = 1, column = 1, columnspan = 1, sticky = W+E+N+S )
+		self.button1.grid( row = 1, column = 1, columnspan = 1, sticky = E )
 		self.button1["command"] = self.quit
 		
-		self.filterbox = IntVar()
-		self.decodebutton = Checkbutton( self, text = "Apply Filters", width = 10, variable = self.filterbox, onvalue = 1, offvalue = 0 )
-		self.decodebutton.grid( row = 7, column = 1, rowspan = 5, sticky = W+E+N+S )
+		self.newMsgs = Button( self, text = "Captured\nMessages", width = 10 )
+		self.newMsgs.grid( row = 2, column = 1, rowspan = 1, sticky = E )
+		self.newMsgs["command"] = self.capMsg
 		
 		self.recieve = Button( self, text = "Begin\nReceiving\nMessages", width = 10 )
-		self.recieve.grid( row = 12, column = 1, rowspan = 5, sticky = W+E+N+S )
+		self.recieve.grid( row = 3, column = 1, rowspan = 1, sticky = E )
 		self.recieve["command"] = self.recievemessage
 		
 		self.updatefilters = Button( self, text = "Captured\nHeaders", width = 10 )
-		self.updatefilters.grid( row = 2, column = 1, rowspan = 5, sticky = W+E+N+S )
+		self.updatefilters.grid( row = 4, column = 1, rowspan = 1, sticky = E )
 		self.updatefilters["command"] = self.capturedHeaders
 		
 		self.savefilterb = Button( self, text = "Save\nFilters", width = 10 )
-		self.savefilterb.grid( row = 17, column = 1, rowspan = 2, sticky = W+E+N+S )
+		self.savefilterb.grid( row = 5, column = 1, rowspan = 1, sticky = E )
 		self.savefilterb["command"] = self.savefilters
 		
 		self.loadfb = Button( self, text = "load\nFilters", width = 10 )
-		self.loadfb.grid( row = 19, column = 1, rowspan = 2, sticky = W+E+N+S )
+		self.loadfb.grid( row = 6, column = 1, rowspan = 1, sticky = E )
 		self.loadfb["command"] = self.loadfilters
 		
 		self.beginlog = Button( self, text = "Begin\nLog", width = 10 )
-		self.beginlog.grid( row = 22, column = 1, rowspan = 2, sticky = W+E+N+S )
+		self.beginlog.grid( row = 7, column = 1, rowspan = 1, sticky = E )
 		self.beginlog["command"] = self.beginLoging
 		
 		self.stoplog = Button( self, text = "End\nLog", width = 10 )
-		self.stoplog.grid( row = 25, column = 1, rowspan = 2, sticky = W+E+N+S )
+		self.stoplog.grid( row = 8, column = 1, rowspan = 1, sticky = E )
 		self.stoplog["command"] = self.endLog
 		
-		self.rowconfigure( 1, weight = 1 )
-		self.columnconfigure( 1, weight = 1 )
-
-		global a
-		a = StringVar()
-		self.filter1 = Entry(self, textvariable = a)
-		self.filter1.grid( row = 3, column = 0, sticky = W+E+N+S )
-		a.set("07B,0,Voltage on temp sensor: ,2,l,.001,0,temp: ,2,l,.01,0,d rail v: ,2,l,.01,0,rail v: ,2,l,.01")
+		self.updatefilters = Button( self, text = "Update\nFilters", width = 10 )
+		self.updatefilters.grid( row = 9, column = 1, rowspan = 1, sticky = E )
+		self.updatefilters["command"] = self.filtersUpdate
 		
-		self.filter2 = Entry(self)
-		self.filter2.grid( row = 4, column = 0, sticky = W+E+N+S )
-		self.filter2.insert( INSERT, "Add a filter..." )
-		
-		self.filter3 = Entry(self)
-		self.filter3.grid( row = 5, column = 0, sticky = W+E+N+S )
-		self.filter3.insert( INSERT, "Add a filter..." )
-		
-		self.filter4 = Entry(self)
-		self.filter4.grid( row = 6, column = 0, sticky = W+E+N+S )
-		self.filter4.insert( INSERT, "101001101001010100100111010" )
-		
-		self.filter5 = Entry(self)
-		self.filter5.grid( row = 7, column = 0, sticky = W+E+N+S )
-		self.filter5.insert( INSERT, "Add a filter..." )
-		
-		self.filter6 = Entry(self)
-		self.filter6.grid( row = 8, column = 0, sticky = W+E+N+S )
-		self.filter6.insert( INSERT, "Add a filter..." )
-		
-		self.filter7 = Entry(self)
-		self.filter7.grid( row = 9, column = 0, sticky = W+E+N+S )
-		self.filter7.insert( INSERT, "Add a filter..." )
-		
-		self.filter8 = Entry(self)
-		self.filter8.grid( row = 10, column = 0, sticky = W+E+N+S )
-		self.filter8.insert( INSERT, "Add a filter..." )
-		
-		self.filter9 = Entry(self)
-		self.filter9.grid( row = 11, column = 0, sticky = W+E+N+S )
-		self.filter9.insert( INSERT, "Add a filter..." )
-		
-		self.filter10 = Entry(self)
-		self.filter10.grid( row = 12, column = 0, sticky = W+E+N+S )
-		self.filter10.insert( INSERT, "Add a filter..." )
-		
-		self.filter11 = Entry(self)
-		self.filter11.grid( row = 13, column = 0, sticky = W+E+N+S )
-		self.filter11.insert( INSERT, "Add a filter..." )
-		
-		self.filter12 = Entry(self)
-		self.filter12.grid( row = 14, column = 0, sticky = W+E+N+S )
-		self.filter12.insert( INSERT, "Add a filter..." )
-		
-		self.filter13 = Entry(self)
-		self.filter13.grid( row = 15, column = 0, sticky = W+E+N+S )
-		self.filter13.insert( INSERT, "Add a filter..." )
-		
-		self.filter14 = Entry(self)
-		self.filter14.grid( row = 16, column = 0, sticky = W+E+N+S )
-		self.filter14.insert( INSERT, "Add a filter..." )
-		
-		self.filter15 = Entry(self)
-		self.filter15.grid( row = 17, column = 0, sticky = W+E+N+S )
-		self.filter15.insert( INSERT, "Add a filter..." )
+		#This is the text box which contains the filters
+		self.filters = Text( self, width = 90)
+		self.filters.grid( row = 2, column = 0,rowspan = 4, sticky = W+E+N+S )
 		
 		
 		self.mylabel = Label(self, text="Header (0x), Initial Offset, Msg, Length (bytes), Endianness , Scale, Skip, Msg, Length, Endianness, Skip...", width = 2, height = 2)
 		self.mylabel.grid( row = 1, column = 0, sticky = W+E+N+S )
 		
 		self.label2 = Label(self, text="Raw Message                                            Decoded Message", width = 2, height = 2)
-		self.label2.grid( row = 18, column = 0, sticky = W+E+N+S )
+		self.label2.grid( row = 6, column = 0, sticky = W+E+N+S, rowspan = 1 )
 		
-		self.output = Text( self, width = 90, height = 15 )
-		self.output.grid( row = 19, column = 0, sticky = W+E+N+S )
+		#This is the text box which contains the filtered messsages
+		self.output = Text( self, width = 90)
+		self.output.grid( row = 7, column = 0, rowspan = 6 , sticky = W+E+N+S )
+		
+		self.rowconfigure( 1, weight = 1 )
+		self.columnconfigure( 1, weight = 1 )
 		
 		
 	
@@ -155,8 +102,14 @@ class GridDemo( Frame ):
 		if(self.dataBack.logflag == 1):
 			self.dataBack.logflag = 0
 			self.dataBack.logfile.close()
+			
+	def filtersUpdate(self):
+		rawfilters = self.filters.get(1.0, END)
+		filtersparsed = rawfilters.split("\n")
+		self.dataBack.filters = filtersparsed
+		print(self.dataBack.filters)
+		print(self.dataBack.filters[1])
 		
-	
 		
 	#This function opens the thread which handles the input from the serial port
 	#It only needs to be run once, it is run by pressing the Recieve Messages button
@@ -168,7 +121,7 @@ class GridDemo( Frame ):
 		th.start()
 			
 		
-	#This function is depreciated and shuld probably be deleated.  Its functionality shuld be (Has been) moved to the CANport thread
+	#This function allows filters in the window to be saved to a file
 	def savefilters (self):
 		from tkinter import filedialog
 		#filename = filedialog.askopenfilename()
@@ -176,36 +129,7 @@ class GridDemo( Frame ):
 		if(filename != None):
 			filterfile = open(filename, 'w') #Opens the provided file name for writing which will replace any existing data
 			
-			filterfile.write(self.filter1.get())  #Writes the filter to the file folowed by a new line charicter
-			filterfile.write('\n')
-			filterfile.write(self.filter2.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter3.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter4.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter5.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter6.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter7.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter8.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter9.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter10.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter11.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter12.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter13.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter14.get())
-			filterfile.write('\n')
-			filterfile.write(self.filter15.get())
-			filterfile.write('\n')
+			filterfile.write(self.filters.get(1.0, END))  #Writes the filters to the file
 			
 			filterfile.close() #closes the file
 
@@ -214,41 +138,9 @@ class GridDemo( Frame ):
 		filename = filedialog.askopenfilename()  #This opens the built in TK dialog box to open a file
 		if(filename != None):
 			filterfile = open(filename, 'r')
-			filtertext = filterfile.read()
-			filters = filtertext.split("\n")
-			
-			self.filter1.delete(0,END)  #Clears all the filters for loading
-			self.filter2.delete(0,END)
-			self.filter3.delete(0,END)
-			self.filter4.delete(0,END)
-			self.filter5.delete(0,END)
-			self.filter6.delete(0,END)
-			self.filter7.delete(0,END)
-			self.filter8.delete(0,END)
-			self.filter9.delete(0,END)
-			self.filter10.delete(0,END)
-			self.filter11.delete(0,END)
-			self.filter12.delete(0,END)
-			self.filter13.delete(0,END)
-			self.filter14.delete(0,END)
-			self.filter15.delete(0,END)
-			
-			self.filter1.insert(0,filters[0])   #Loads the filters from the file
-			self.filter2.insert(0,filters[1])
-			self.filter3.insert(0,filters[2])
-			self.filter4.insert(0,filters[3])
-			self.filter5.insert(0,filters[4])
-			self.filter6.insert(0,filters[5])
-			self.filter7.insert(0,filters[6])
-			self.filter8.insert(0,filters[7])
-			self.filter9.insert(0,filters[8])
-			self.filter10.insert(0,filters[9])
-			self.filter11.insert(0,filters[10])
-			self.filter12.insert(0,filters[11])
-			self.filter13.insert(0,filters[12])
-			self.filter14.insert(0,filters[13])
-			self.filter15.insert(0,filters[14])
-			
+			filters = filterfile.read()
+			self.filters.delete(1.0,END)  #Clears all the filters for loading
+			self.filters.insert(1.0,filters)   #Loads the filters from the file
 			filterfile.close() #closes the filter save file
 
 	def beginLoging (self):
@@ -265,36 +157,8 @@ class GridDemo( Frame ):
 	#dataindicie points to the first unparsed piece of data in the CAN message
 	def parsesecton(self , parsedmsg, readindicie, dataindicie, filter):
 		data = parsedmsg.group(4)
-		if(filter == 1):
-			a = self.filter1.get() #read in a filter, remove spaces and seperate it at commas
-		if(filter == 2):
-			a = self.filter2.get()	
-		if(filter == 3):
-			a = self.filter3.get()	
-		if(filter == 4):
-			a = self.filter4.get()	
-		if(filter == 5):
-			a = self.filter5.get()	
-		if(filter == 6):
-			a = self.filter6.get()	
-		if(filter == 7):
-			a = self.filter7.get()	
-		if(filter == 8):
-			a = self.filter8.get()	
-		if(filter == 9):
-			a = self.filter9.get()	
-		if(filter == 10):
-			a = self.filter10.get()	
-		if(filter == 11):
-			a = self.filter11.get()	
-		if(filter == 12):
-			a = self.filter12.get()	
-		if(filter == 13):
-			a = self.filter13.get()	
-		if(filter == 14):
-			a = self.filter14.get()	
-		if(filter == 15):
-			a = self.filter15.get()	
+		
+		a = self.dataBack.filters[filter]
 			
 		a = a.strip( ' ' )
 		filterlist = a.split(",")
@@ -314,61 +178,50 @@ class GridDemo( Frame ):
 		self.output.insert(END, " "+filterlist[readindicie+1])  #adds the message from the filter to the output window
 		#print(filterlist[readindicie+4])
 		self.output.insert(END, int(dataflipped, 16)*float(filterlist[readindicie+4]) ) #converts the hex data in dataflipped to decimal and then multiplies by the user defined multiplier, then outputs
-
+		outmsg = ""
+		outmsg = filterlist[readindicie+1] + str(int(dataflipped, 16)*float(filterlist[readindicie+4]))
+		if(parsedmsg.group(1) == None):
+			self.dataBack.messages[parsedmsg.group(2)] = outmsg
+		if(parsedmsg.group(2) == None):
+			self.dataBack.messages[parsedmsg.group(1)] = outmsg
+		
 		
 		
 	#This is a function which handles the parsing of an entire CAN message
 	#Most of the actual parsing is done through repeated calls to parssection which parses each section of the message
 	def parsemessage (self , parsedmsg, filter):
-		if(filter == 1):
-			b = self.filter1.get() #imports the user's filter then splits it based on commas and stores the list to list1
-		if(filter == 2):
-			b = self.filter2.get()	
-		if(filter == 3):
-			b = self.filter3.get()	
-		if(filter == 4):
-			b = self.filter4.get()	
-		if(filter == 5):
-			b = self.filter5.get()	
-		if(filter == 6):
-			b = self.filter6.get()	
-		if(filter == 7):
-			b = self.filter7.get()	
-		if(filter == 8):
-			b = self.filter8.get()	
-		if(filter == 9):
-			b = self.filter9.get()	
-		if(filter == 10):
-			b = self.filter10.get()	
-		if(filter == 11):
-			b = self.filter11.get()	
-		if(filter == 12):
-			b = self.filter12.get()	
-		if(filter == 13):
-			b = self.filter13.get()	
-		if(filter == 14):
-			b = self.filter14.get()	
-		if(filter == 15):
-			b = self.filter15.get()	
+	
+		b = self.dataBack.filters[filter]
 			
 		list1 = b.split(",")
 		#print(parsedmsg.group(2)) #prints the header
 		self.dataBack.headers.add(parsedmsg.group(2)) #adds a new header to the set stored in the backend
 		#print(self.dataBack.headers);
+		outputmessage = ""
 		if ((list1[0] == parsedmsg.group(1))or(list1[0] == parsedmsg.group(2))): #checks to see if the header matches
 			#print("header detected")
 			self.output.insert(END, "\n")
 			self.output.insert(END, parsedmsg.groups())
 			self.output.insert(END, "\n")
 			self.output.insert(END, "Header: ")
+			outputmessage = "\nHeader"
 			if(parsedmsg.group(1) == None):
 				self.output.insert(END, parsedmsg.group(2)) #prints the header if long 
+				outputmessage = outputmessage + parsedmsg.group(2)
 			if(parsedmsg.group(2) == None):
 				self.output.insert(END, parsedmsg.group(1)) #prints the header if short
+				outputmessage = outputmessage + parsedmsg.group(1)
 			self.output.insert(END, ", BOD: ")
+			outputmessage = outputmessage + ", BOD: " + parsedmsg.group(3)
 			self.output.insert(END, parsedmsg.group(3)) #prints the number of bytes of data
 			readindicie = 1 #readindicie points to the first unread field in the filter
 			dataindicie = 0 #data indicie points to the first unread bit of data
+			
+			#if(parsedmsg.group(1) == None):
+			#	self.dataBack.messages[parsedmsg.group(2)] = outputmessage
+			#if(parsedmsg.group(2) == None):
+			#	self.dataBack.messages[parsedmsg.group(1)] = outputmessage
+				
 			while(readindicie+5 <= len(list1)): #calls parsesection as long as there are still at least five unread filter fields
 				dataindicie = dataindicie + 2*int(list1[readindicie])
 				self.parsesecton(parsedmsg, readindicie, dataindicie, filter)
@@ -378,27 +231,26 @@ class GridDemo( Frame ):
 	#Refreshout is triggered whenever a message is present in the message_queue.  It refreshes the GUI.
 	def refreshout (self, event):
 		#print(self.filterbox)
-		if(self.filterbox):
-			#This pulls the unparsed message and writes it to the output field of the GUI
-			rawmsg = self.message_queue.get()
-			print(rawmsg);
-			if(self.dataBack.logflag == 1):
-				self.dataBack.logfile.write(rawmsg)
-				self.dataBack.logfile.write("      " + strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-				self.dataBack.logfile.write("\n")
-				
-			#self.output.insert(END, self.message_queue.get())
-			#self.output.insert(END, "                       ")
-			#This pulls the parsed message and prints its components to the output field of the GUI
-			#self.output.insert(END, self.message_queue.get().groups())
-			#self.output.delete(0, END)
-			filternumber = 1
-			messageparsed = self.message_queue.get()
-			while(filternumber <= 15):
-				self.parsemessage(messageparsed, filternumber);
-				filternumber = filternumber + 1
-			#self.output.insert(END, "\n")
-			self.output.see(END)
+		#This pulls the unparsed message and writes it to the output field of the GUI
+		rawmsg = self.message_queue.get()
+		print(rawmsg);
+		if(self.dataBack.logflag == 1):
+			self.dataBack.logfile.write(rawmsg)
+			self.dataBack.logfile.write("      " + strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+			self.dataBack.logfile.write("\n")
+			
+		#self.output.insert(END, self.message_queue.get())
+		#self.output.insert(END, "                       ")
+		#This pulls the parsed message and prints its components to the output field of the GUI
+		#self.output.insert(END, self.message_queue.get().groups())
+		#self.output.delete(0, END)
+		filternumber = 0
+		messageparsed = self.message_queue.get()
+		while(filternumber < len(self.dataBack.filters)):
+			self.parsemessage(messageparsed, filternumber);
+			filternumber = filternumber + 1
+		#self.output.insert(END, "\n")
+		self.output.see(END)
 	
 	def capturedHeaders(self):
 		# create child window
@@ -412,6 +264,16 @@ class GridDemo( Frame ):
 
 		#message2 = "this is a test message"
 		#self.headerstext.insert(END, message2) #This line works to add text
+		
+	def capMsg(self):
+		# create child window
+		msgs = Toplevel()
+		# display message
+		message = "Recently Seen Messages"
+		Label(msgs, text=message).pack()
+		self.msgstext = Text(msgs)
+		self.msgstext.pack()
+		self.msgstext.insert(END, self.dataBack.messages)
 		
 
 	

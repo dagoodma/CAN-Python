@@ -1,8 +1,16 @@
 TO DO:
-Many filters
 Filtering on data within the message
-Display most recent of each message
-	-maybe use a dictionary with headers and values
-Logging - handle close case better
 Make COM port selectable
+	-Make as a menu
 Clear old messages from display
+	-Pull from text box using .get then check size and delete the first part once past a certan size
+
+TO IMPROVE:
+Make captured options live
+Make loging auto stop when program closes
+Log filtered messages
+make filters update automaticaly
+
+Jank:
+update filters function shuld be renamed
+captured headers does not work if no filters are applied
