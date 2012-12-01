@@ -14,3 +14,4 @@ make filters update automaticaly
 Jank:
 update filters function shuld be renamed
 captured headers does not work if no filters are applied
+make filterd for messages removed from queue
