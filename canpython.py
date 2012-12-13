@@ -97,12 +97,14 @@ class GridDemo( Frame ):
 		self.columnconfigure( 1, weight = 1 )
 		
 		
-	
+	#end log closes the logfile and sets the loging flag to be false
 	def endLog(self):
 		if(self.dataBack.logflag == 1):
 			self.dataBack.logflag = 0
 			self.dataBack.logfile.close()
 			
+	#This function updates the filters stored in the back end to match what is showing on the screen
+	#I would like to automate this at some point
 	def filtersUpdate(self):
 		rawfilters = self.filters.get(1.0, END)
 		filtersparsed = rawfilters.split("\n")
@@ -252,6 +254,8 @@ class GridDemo( Frame ):
 		#self.output.insert(END, "\n")
 		self.output.see(END)
 	
+	#Opens a new window which displays all of the headers which have been seen
+	#Only displays headers up untill time button is pressed --- would like it to be live
 	def capturedHeaders(self):
 		# create child window
 		win = Toplevel()
@@ -264,7 +268,9 @@ class GridDemo( Frame ):
 
 		#message2 = "this is a test message"
 		#self.headerstext.insert(END, message2) #This line works to add text
-		
+	
+	#Shows the most recent version of messages in a new window
+	#Only shows messages captured before the button press -- shuld be made to auto update
 	def capMsg(self):
 		# create child window
 		msgs = Toplevel()
