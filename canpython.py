@@ -74,9 +74,6 @@ class GridDemo( Frame ):
 		self.stoplog.grid( row = 8, column = 1, rowspan = 1, sticky = E )
 		self.stoplog["command"] = self.endLog
 		
-		self.updatefilters = Button( self, text = "Update\nFilters", width = 10 )
-		self.updatefilters.grid( row = 9, column = 1, rowspan = 1, sticky = E )
-		self.updatefilters["command"] = self.filtersUpdate
 		
 		#This is the text box which contains the filters
 		self.filters = Text( self, width = 90)
@@ -236,6 +233,7 @@ class GridDemo( Frame ):
 		#This pulls the unparsed message and writes it to the output field of the GUI
 		rawmsg = self.message_queue.get()
 		print(rawmsg);
+		self.filtersUpdate()
 		if(self.dataBack.logflag == 1):
 			self.dataBack.logfile.write(rawmsg)
 			self.dataBack.logfile.write("      " + strftime("%Y-%m-%d %H:%M:%S", gmtime()))
@@ -264,7 +262,17 @@ class GridDemo( Frame ):
 		Label(win, text=message).pack()
 		self.headerstext = Text(win)
 		self.headerstext.pack()
+		length = len(self.dataBack.headers)
 		self.headerstext.insert(END, self.dataBack.headers)
+		self.headerstext.insert(END, '\n')
+		self.headerstext.insert(END, length)
+		while (length > 0):
+			self.headerstext.insert(END, '\n')
+			self.headerstext.insert(END, self.dataBack.headers[length])
+			self.headerstext.insert(END, length)
+			length = length - 1
+			print("this ran")
+		
 
 		#message2 = "this is a test message"
 		#self.headerstext.insert(END, message2) #This line works to add text
