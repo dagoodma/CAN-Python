@@ -80,7 +80,7 @@ class GridDemo( Frame ):
 		self.filters.grid( row = 2, column = 0,rowspan = 4, sticky = W+E+N+S )
 		
 		
-		self.mylabel = Label(self, text="Header (0x), Initial Offset, Msg, Length (bytes), Endianness , Scale, Skip, Msg, Length, Endianness, Skip...", width = 2, height = 2)
+		self.mylabel = Label(self, text="Header (0x), Initial Offset (Bytes), Msg, Length (bytes), Endianness and signedness , Scale, Skip, Msg, Length, Endianness, Skip...", width = 2, height = 2)
 		self.mylabel.grid( row = 1, column = 0, sticky = W+E+N+S )
 		
 		self.label2 = Label(self, text="Raw Message                                            Decoded Message", width = 2, height = 2)
@@ -161,8 +161,8 @@ class GridDemo( Frame ):
 			
 		a = a.strip( ' ' )
 		filterlist = a.split(",")
-		if(filterlist[readindicie+3] == "l"): #if little endian is indicated the indicated number of bits are rearanged and stored in dataflipped
-			#print("little endian detected")
+		if(filterlist[readindicie+3][0] == "l"): #if little endian is indicated (by the first letter in readindicie +3) the indicated number of bits are rearanged and stored in dataflipped
+			print("little endian")
 			dataflipped = ""
 			count = int(filterlist[readindicie+2])
 			position = 0
@@ -172,11 +172,25 @@ class GridDemo( Frame ):
 				count = count - 1
 		else:  #if little endian is not detected, big endian is assumed and the indicated number of bytes are read off of data and stored in dataflipped
 			dataflipped = data[dataindicie:(dataindicie+2*int(filterlist[readindicie+2]))];
-			#print("big endian detected")
+			print("big endian")
+			
 		#print(dataflipped)
 		self.output.insert(END, " "+filterlist[readindicie+1])  #adds the message from the filter to the output window
 		#print(filterlist[readindicie+4])
-		self.output.insert(END, int(dataflipped, 16)*float(filterlist[readindicie+4]) ) #converts the hex data in dataflipped to decimal and then multiplies by the user defined multiplier, then outputs
+		value = int(dataflipped, 16)
+		
+		if(filterlist[readindicie+3][1] == "s"): #if signed is indicated (by the second letter in readindicie +3) the the number is convertd to be signed
+			#print("signed")
+			size = int(filterlist[readindicie+2]) #this is the number of bytes
+			size = size * 8
+			
+			if value > 2**(size-1):
+				value = value - 2**size
+
+		else: #if the number is unsigned
+			print("unsigned (indie)");
+		
+		self.output.insert(END, value*float(filterlist[readindicie+4]) ) #converts the hex data in dataflipped to decimal and then multiplies by the user defined multiplier, then outputs
 		outmsg = ""
 		outmsg = filterlist[readindicie+1] + str(int(dataflipped, 16)*float(filterlist[readindicie+4]))
 		if(parsedmsg.group(1) == None):
@@ -262,16 +276,7 @@ class GridDemo( Frame ):
 		Label(win, text=message).pack()
 		self.headerstext = Text(win)
 		self.headerstext.pack()
-		length = len(self.dataBack.headers)
 		self.headerstext.insert(END, self.dataBack.headers)
-		self.headerstext.insert(END, '\n')
-		self.headerstext.insert(END, length)
-		while (length > 0):
-			self.headerstext.insert(END, '\n')
-			self.headerstext.insert(END, self.dataBack.headers[length])
-			self.headerstext.insert(END, length)
-			length = length - 1
-			print("this ran")
 		
 
 		#message2 = "this is a test message"
