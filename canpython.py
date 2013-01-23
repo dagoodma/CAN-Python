@@ -1,9 +1,40 @@
+#!/usr/bin/env python
+"""\
+canpython.py is a tool for interpretting and printing messages from a
+CAN bus connected to the PC.
 
-from tkinter import *
+Author: Bar Smith (bapsmith@ucsc.edu)
+
+Notes:
+-----
+* 2013-1-23 -- dagoodma
+    Added compatability with Python 2.x and 3.x. Works!
+
+"""
+
+# Python 2.x and 3.x compatability 
+try:
+    from tkinter import *
+    import queue
+    #import tkinter.filedialog
+    #import tkinter.messagebox
+except ImportError as ex:
+    # Must be using Python 2.x, import and rename
+    from Tkinter import *
+    import Queue
+    #import tkFileDialog
+    #import tkMessageBox
+
+    #tkinter.filedialog = tkFileDialog
+    #del tkFileDialog
+    #tkinter.messagebox = tkMessageBox
+    #del tkMessageBox
+
+    queue = Queue
+
 import serial
 import re
 import threading
-import queue
 import time
 from time import gmtime, strftime
 
